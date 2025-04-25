@@ -1,6 +1,10 @@
 In this project, we aim to create a web application that makes searching for a new home simple. Users cant browse home by certain criteria and have the option to use AI to aid in their specific needs. 
 
 
+![image](https://github.com/user-attachments/assets/84c0494f-2af1-4a20-b6b2-6992a8083a5f)
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
