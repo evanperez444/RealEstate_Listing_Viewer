@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Home, Search, Users } from 'lucide-react';
+import { SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
 
 export default function Header() {
   return (
@@ -15,11 +15,11 @@ export default function Header() {
               <path d="M18 27C23.5228 27 28 22.5228 28 17C28 11.4772 23.5228 7 18 7C12.4772 7 8 11.4772 8 17C8 22.5228 12.4772 27 18 27Z" fill="#9277FF"/>
             </svg>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">Logoipsum</span>
+          <span className="text-xl font-bold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">RealEstate Listing Viewer</span>
         </Link>
         
         {/* Navigation links */}
-        <nav className="hidden md:flex items-center gap-16">
+        <nav className="hidden md:flex items-center gap-12">
           <Link href="/for-sale" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
             <Home size={16} className="group-hover:text-primary transition-colors" />
             <span>For Sale</span>
@@ -34,20 +34,32 @@ export default function Header() {
           </Link>
         </nav>
         
-        {/* CTA button */}
-        <Button className="bg-primary hover:bg-primary/90 text-white rounded-lg shadow-md hover:shadow-lg transition-all px-5">
-          <span className="hidden sm:inline-flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Post Your Ad
-          </span>
-          <span className="sm:hidden">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 1V11M1 6H11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </span>
-        </Button>
+        {/* Auth / CTA buttons */}
+        <div className="flex items-center gap-3">
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+          <SignedOut>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link href="/app/sign-in">
+                <Button variant="outline" size="sm">Sign In</Button>
+              </Link>
+              <Link href="/app/sign-up">
+                <Button size="sm">Sign Up</Button>
+              </Link>
+            </div>
+            <div className="sm:hidden">
+              <Link href="/app/sign-in">
+                <Button variant="outline" size="icon" className="w-9 h-9 rounded-full">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M20.5899 22C20.5899 18.13 16.7399 15 11.9999 15C7.25991 15 3.40991 18.13 3.40991 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </Button>
+              </Link>
+            </div>
+          </SignedOut>
+        </div>
       </div>
     </header>
   );
