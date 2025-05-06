@@ -3,9 +3,11 @@ import Header from './_components/Header.jsx';
 
 const Provider = ({ children }) => {
     return (
-        <div>
-            <Header/>
-            {children}
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">
+                {children}
+            </main>
         </div>
     );
 };
