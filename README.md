@@ -1,4 +1,31 @@
-In this project, we aim to create a web application that makes searching for a new home simple. Users cant browse home by certain criteria and have the option to use AI to aid in their specific needs. 
+In this project, we aim to create a web application that makes searching for a new home simple. 
+Users cant browse home by certain criteria and have the option to use AI to aid in their specific needs. 
+# RealEstate Listing Viewer 🏘️
+
+A simple desktop application to view real estate listings from a CSV file, built with Python and Tkinter.
+
+## Features
+
+- Load real estate data from a CSV file
+- Display listings in a table format
+- Sort listings by price
+- View detailed info for each listing
+
+## Requirements
+
+- Python 3 or latest version recommended 
+- `tkinter` (built-in library within python)
+- `pandas`
+
+## Installation
+
+1. Clone the repository:
+
+```inside the system ternimal or cmd prompt
+
+git clone https://github.com/evanperez444/RealEstate_Listing_Viewer.git
+cd RealEstate_Listing_Viewer
+
 
 
 ![image](https://github.com/user-attachments/assets/84c0494f-2af1-4a20-b6b2-6992a8083a5f)
