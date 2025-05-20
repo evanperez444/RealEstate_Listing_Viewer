@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './_components/Header.jsx';
+import { Footer } from '@/components/Footer.jsx';
 
 const Provider = ({ children }) => {
     return (
@@ -8,6 +9,7 @@ const Provider = ({ children }) => {
             <main className="flex-grow">
                 {children}
             </main>
+            <Footer/>
         </div>
     );
 };

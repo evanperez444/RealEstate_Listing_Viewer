@@ -1,6 +1,8 @@
+// app/_components/Header.jsx
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Home, Search, Users } from 'lucide-react';
+import { Home, Search, Users, PlusCircle, Heart, Calendar } from 'lucide-react';
 import { SignedIn, SignedOut, UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
 
 export default function Header() {
@@ -15,28 +17,46 @@ export default function Header() {
               <path d="M18 27C23.5228 27 28 22.5228 28 17C28 11.4772 23.5228 7 18 7C12.4772 7 8 11.4772 8 17C8 22.5228 12.4772 27 18 27Z" fill="#9277FF"/>
             </svg>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">RealEstate Listing Viewer</span>
+          <span className="text-xl font-bold bg-gradient-to-r from-primary/90 to-primary bg-clip-text text-transparent">HomeFinder</span>
         </Link>
         
         {/* Navigation links */}
-        <nav className="hidden md:flex items-center gap-12">
-          <Link href="/for-sale" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
+        <nav className="hidden md:flex items-center gap-6">
+          <Link href="/buy" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
             <Home size={16} className="group-hover:text-primary transition-colors" />
-            <span>For Sale</span>
+            <span>Buy</span>
           </Link>
-          <Link href="/for-rent" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
+          <Link href="/rent" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
             <Search size={16} className="group-hover:text-primary transition-colors" />
-            <span>For Rent</span>
+            <span>Rent</span>
           </Link>
-          <Link href="/agent-finder" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
+          <Link href="/sell" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
+            <PlusCircle size={16} className="group-hover:text-primary transition-colors" />
+            <span>Sell</span>
+          </Link>
+          <Link href="/assistant" className="font-medium hover:text-primary transition-colors flex items-center gap-1.5 group">
             <Users size={16} className="group-hover:text-primary transition-colors" />
-            <span>Agent Finder</span>
+            <span>AI Assistant</span>
           </Link>
         </nav>
         
         {/* Auth / CTA buttons */}
         <div className="flex items-center gap-3">
           <SignedIn>
+            <div className="hidden md:flex items-center gap-3 mr-2">
+              <Link href="/dashboard/saved">
+                <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                  <Heart size={16} />
+                  <span>Saved</span>
+                </Button>
+              </Link>
+              <Link href="/dashboard/appointments">
+                <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                  <Calendar size={16} />
+                  <span>Appointments</span>
+                </Button>
+              </Link>
+            </div>
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
           <SignedOut>
