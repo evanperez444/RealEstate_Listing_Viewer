@@ -22,11 +22,11 @@ export async function GET(request) {
     query = query.lte('price', parseFloat(searchParams.get('maxPrice')));
   }
   
-  if (searchParams.has('minBeds')) {
+  if (searchParams.has('minBeds') && searchParams.get('minBeds') !== 'any') {
     query = query.gte('bedrooms', parseInt(searchParams.get('minBeds')));
   }
   
-  if (searchParams.has('minBaths')) {
+  if (searchParams.has('minBaths') && searchParams.get('minBaths') !== 'any') {
     query = query.gte('bathrooms', parseInt(searchParams.get('minBaths')));
   }
   
@@ -73,20 +73,67 @@ export async function POST(request) {
   try {
     const body = await request.json();
     
+    // Validate required fields
+    const requiredFields = [
+      'title', 'description', 'price', 'address', 'city', 'state', 
+      'zipCode', 'bedrooms', 'bathrooms', 'squareFeet', 'propertyType', 
+      'listingType', 'imageUrl'
+    ];
+    
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return Response.json({ error: `${field} is required` }, { status: 400 });
+      }
+    }
+    
+    // Convert numeric strings to numbers
+    const price = parseFloat(body.price);
+    const bedrooms = parseInt(body.bedrooms);
+    const bathrooms = parseInt(body.bathrooms);
+    const squareFeet = parseInt(body.squareFeet);
+    const yearBuilt = body.yearBuilt ? parseInt(body.yearBuilt) : null;
+    const lat = parseFloat(body.lat);
+    const lng = parseFloat(body.lng);
+    
+    // Validate numeric values
+    if (isNaN(price) || price <= 0) {
+      return Response.json({ error: 'Price must be a positive number' }, { status: 400 });
+    }
+    
+    if (isNaN(bedrooms) || bedrooms <= 0) {
+      return Response.json({ error: 'Bedrooms must be a positive number' }, { status: 400 });
+    }
+    
+    if (isNaN(bathrooms) || bathrooms <= 0) {
+      return Response.json({ error: 'Bathrooms must be a positive number' }, { status: 400 });
+    }
+    
+    if (isNaN(squareFeet) || squareFeet <= 0) {
+      return Response.json({ error: 'Square feet must be a positive number' }, { status: 400 });
+    }
+    
+    if (body.yearBuilt && (isNaN(yearBuilt) || yearBuilt <= 0)) {
+      return Response.json({ error: 'Year built must be a positive number' }, { status: 400 });
+    }
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      return Response.json({ error: 'Invalid coordinates' }, { status: 400 });
+    }
+    
     const propertyData = {
       title: body.title,
       description: body.description,
-      price: parseFloat(body.price),
+      price: price,
       address: body.address,
       city: body.city,
       state: body.state,
       zip_code: body.zipCode,
-      lat: parseFloat(body.lat),
-      lng: parseFloat(body.lng),
-      bedrooms: parseInt(body.bedrooms),
-      bathrooms: parseInt(body.bathrooms),
-      square_feet: parseInt(body.squareFeet),
-      year_built: body.yearBuilt ? parseInt(body.yearBuilt) : null,
+      lat: lat,
+      lng: lng,
+      bedrooms: bedrooms,
+      bathrooms: bathrooms,
+      square_feet: squareFeet,
+      year_built: yearBuilt,
       property_type: body.propertyType,
       listing_type: body.listingType,
       image_url: body.imageUrl,
@@ -107,6 +154,7 @@ export async function POST(request) {
     
     return Response.json(data, { status: 201 });
   } catch (error) {
+    console.error('Error creating property:', error);
     return Response.json({ error: 'Failed to create property' }, { status: 500 });
   }
 }

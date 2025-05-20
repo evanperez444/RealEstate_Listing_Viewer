@@ -9,19 +9,28 @@ import { MapPin, Navigation, ExternalLink } from 'lucide-react';
 export function PropertyMap({ property, height = "500px" }) {
   const mapRef = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(null);
   
   useEffect(() => {
     // Check if Google Maps script is already loaded
     if (!document.getElementById('google-maps-script') && !window.google?.maps) {
+      const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      
+      if (!googleMapsApiKey) {
+        setMapError("Google Maps API key is missing. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.");
+        return;
+      }
+      
       const script = document.createElement('script');
       script.id = 'google-maps-script';
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = () => setMapLoaded(true);
+      script.onerror = () => setMapError("Failed to load Google Maps. Please try again later.");
       document.head.appendChild(script);
     } else {
-      setMapLoaded(true);
+      setMapLoaded(!!window.google?.maps);
     }
     
     return () => {
@@ -29,25 +38,41 @@ export function PropertyMap({ property, height = "500px" }) {
     };
   }, []);
   
+  // Initialize map once Google Maps is loaded and property is available
   useEffect(() => {
     if (mapLoaded && property && mapRef.current) {
-      const { lat, lng } = property;
-      const mapOptions = {
-        center: { lat: parseFloat(lat), lng: parseFloat(lng) },
-        zoom: 15,
-        mapTypeControl: false,
-        streetViewControl: false,
-      };
-      
-      const map = new window.google.maps.Map(mapRef.current, mapOptions);
-      
-      // Add marker for the property
-      new window.google.maps.Marker({
-        position: { lat: parseFloat(lat), lng: parseFloat(lng) },
-        map,
-        title: property.title,
-        animation: window.google.maps.Animation.DROP,
-      });
+      try {
+        const { lat, lng } = property;
+        
+        // Validate coordinates
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        
+        if (isNaN(latitude) || isNaN(longitude)) {
+          setMapError("Invalid property coordinates");
+          return;
+        }
+        
+        const mapOptions = {
+          center: { lat: latitude, lng: longitude },
+          zoom: 15,
+          mapTypeControl: false,
+          streetViewControl: false,
+        };
+        
+        const map = new window.google.maps.Map(mapRef.current, mapOptions);
+        
+        // Add marker for the property
+        new window.google.maps.Marker({
+          position: { lat: latitude, lng: longitude },
+          map,
+          title: property.title,
+          animation: window.google.maps.Animation.DROP,
+        });
+      } catch (error) {
+        console.error("Error initializing map:", error);
+        setMapError("Could not display property location on map");
+      }
     }
   }, [mapLoaded, property]);
   
@@ -80,11 +105,19 @@ export function PropertyMap({ property, height = "500px" }) {
   return (
     <Card className="w-full shadow-lg overflow-hidden">
       <div className="relative w-full" style={{ height }}>
-        <div ref={mapRef} className="w-full h-full"></div>
-        {!mapLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        {mapError ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+            <div className="text-center p-4">
+              <MapPin className="h-10 w-10 mx-auto mb-2 text-gray-400" />
+              <p className="text-gray-500">{mapError}</p>
+            </div>
+          </div>
+        ) : !mapLoaded ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
           </div>
+        ) : (
+          <div ref={mapRef} className="w-full h-full"></div>
         )}
       </div>
       

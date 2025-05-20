@@ -1,6 +1,5 @@
-"use client";
-
 // components/PropertyCard.jsx
+"use client";
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +14,7 @@ import { toast } from 'sonner';
 export function PropertyCard({ property, onScheduleViewing }) {
   const { userId, isSignedIn } = useAuth();
   const [isFavorite, setIsFavorite] = useState(property.isSaved || false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const createdDate = new Date(property.created_at);
   const daysAgo = Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 3600 * 24));
@@ -29,22 +29,28 @@ export function PropertyCard({ property, onScheduleViewing }) {
       return;
     }
     
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
     try {
-      if (isFavorite) {
-        await fetch(`/api/saved-properties/${property.id}`, {
-          method: 'DELETE',
-        });
-        toast.success("Removed from favorites");
-      } else {
-        await fetch(`/api/saved-properties/${property.id}`, {
-          method: 'POST',
-        });
-        toast.success("Added to favorites");
+      const endpoint = `/api/saved-properties/${property.id}`;
+      const method = isFavorite ? 'DELETE' : 'POST';
+      
+      const response = await fetch(endpoint, { method });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update favorites');
       }
       
       setIsFavorite(!isFavorite);
+      toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
     } catch (error) {
+      console.error('Error updating favorites:', error);
       toast.error("Failed to update favorites");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,6 +68,11 @@ export function PropertyCard({ property, onScheduleViewing }) {
     }
   };
 
+  // Ensure the price is always a number before formatting
+  const price = typeof property.price === 'string' 
+    ? parseFloat(property.price) 
+    : property.price;
+
   return (
     <Link href={`/properties/${property.id}`} className="block">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform hover:translate-y-[-4px] duration-300">
@@ -69,10 +80,11 @@ export function PropertyCard({ property, onScheduleViewing }) {
           <div className="aspect-[4/3] relative">
             <Image 
               src={property.image_url} 
-              alt={property.title}
+              alt={property.title || 'Property image'}
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={false}
             />
           </div>
           
@@ -83,8 +95,9 @@ export function PropertyCard({ property, onScheduleViewing }) {
           )}
           
           <button 
-            className="absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:text-primary dark:bg-gray-700 dark:text-gray-200"
+            className={`absolute top-2 right-2 bg-white p-2 rounded-full shadow-md hover:text-primary dark:bg-gray-700 dark:text-gray-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={handleFavoriteClick}
+            disabled={isLoading}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
@@ -93,11 +106,14 @@ export function PropertyCard({ property, onScheduleViewing }) {
         
         <div className="p-4">
           <div className="flex justify-between">
-            <span className="text-lg font-bold text-primary">{formatPrice(property.price)}</span>
+            <span className="text-lg font-bold text-primary">
+              {formatPrice(price)}
+              {property.listing_type === 'rent' && <span className="text-gray-500 dark:text-gray-400 text-sm font-normal">/month</span>}
+            </span>
             <span className="text-sm text-gray-500 dark:text-gray-400">{listedText}</span>
           </div>
           
-          <h3 className="text-lg font-semibold mt-2 text-gray-900 dark:text-gray-100">{property.title}</h3>
+          <h3 className="text-lg font-semibold mt-2 text-gray-900 dark:text-gray-100 line-clamp-1">{property.title}</h3>
           <p className="text-gray-600 dark:text-gray-300 text-sm">{property.city}, {property.state} {property.zip_code}</p>
           
           <div className="flex items-center mt-2">
@@ -138,7 +154,7 @@ export function PropertyCard({ property, onScheduleViewing }) {
                 <path d="M12 11.9999V14.9999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M16.5 11.9999V14.9999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-sm text-gray-600 dark:text-gray-300">{property.square_feet.toLocaleString()} sq ft</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">{property.square_feet?.toLocaleString() || 0} sq ft</span>
             </div>
           </div>
           

@@ -45,7 +45,7 @@ export function PropertyForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<PropertyFormValues>({
+  const form = useForm({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       title: "",
@@ -73,7 +73,7 @@ export function PropertyForm() {
     
     setIsSubmitting(true);
     try {
-      // Random coordinates for demo purposes (in a real app, use geocoding)
+      // Generate random coordinates for demo purposes (in a real app, use geocoding)
       const lat = 34.052235 + (Math.random() * 0.1 - 0.05);
       const lng = -118.243683 + (Math.random() * 0.1 - 0.05);
       
@@ -105,11 +105,12 @@ export function PropertyForm() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to create property listing');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create property listing');
       }
       
       toast.success("Your property listing has been created successfully.");
-      router.push("/");
+      router.push("/dashboard/listings");
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create property listing.");

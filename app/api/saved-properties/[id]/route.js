@@ -12,30 +12,49 @@ export async function POST(request, { params }) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
-  // Check if property exists
-  const { data: property, error: propertyError } = await supabase
-    .from(Tables.PROPERTIES)
-    .select('id')
-    .eq('id', id)
-    .single();
-  
-  if (propertyError || !property) {
-    return Response.json({ error: 'Property not found' }, { status: 404 });
+  try {
+    // Check if property exists
+    const { data: property, error: propertyError } = await supabase
+      .from(Tables.PROPERTIES)
+      .select('id')
+      .eq('id', id)
+      .single();
+    
+    if (propertyError || !property) {
+      return Response.json({ error: 'Property not found' }, { status: 404 });
+    }
+    
+    // Check if property is already saved by this user
+    const { data: existingSave } = await supabase
+      .from(Tables.SAVED_PROPERTIES)
+      .select('id')
+      .eq('property_id', id)
+      .eq('user_id', userId)
+      .single();
+      
+    if (existingSave) {
+      // Property is already saved
+      return Response.json({ success: true, message: 'Property already saved' });
+    }
+    
+    // Add to saved properties
+    const { error } = await supabase
+      .from(Tables.SAVED_PROPERTIES)
+      .insert({
+        property_id: id,
+        user_id: userId
+      });
+    
+    if (error) {
+      console.error('Error saving property:', error);
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+    
+    return Response.json({ success: true, message: 'Property saved successfully' });
+  } catch (error) {
+    console.error('Unexpected error saving property:', error);
+    return Response.json({ error: 'Failed to save property' }, { status: 500 });
   }
-  
-  // Add to saved properties
-  const { error } = await supabase
-    .from(Tables.SAVED_PROPERTIES)
-    .insert({
-      property_id: id,
-      user_id: userId
-    });
-  
-  if (error && error.code !== '23505') { // Ignore unique constraint violations
-    return Response.json({ error: error.message }, { status: 500 });
-  }
-  
-  return Response.json({ success: true });
 }
 
 export async function DELETE(request, { params }) {
@@ -46,16 +65,22 @@ export async function DELETE(request, { params }) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
-  // Remove from saved properties
-  const { error } = await supabase
-    .from(Tables.SAVED_PROPERTIES)
-    .delete()
-    .eq('property_id', id)
-    .eq('user_id', userId);
-  
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+  try {
+    // Remove from saved properties
+    const { error } = await supabase
+      .from(Tables.SAVED_PROPERTIES)
+      .delete()
+      .eq('property_id', id)
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error removing saved property:', error);
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+    
+    return Response.json({ success: true, message: 'Property removed from saved list' });
+  } catch (error) {
+    console.error('Unexpected error removing saved property:', error);
+    return Response.json({ error: 'Failed to remove saved property' }, { status: 500 });
   }
-  
-  return Response.json({ success: true });
 }

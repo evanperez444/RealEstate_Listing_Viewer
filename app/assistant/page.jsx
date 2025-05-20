@@ -1,5 +1,5 @@
-"use client";
 // app/assistant/page.jsx
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -33,18 +33,6 @@ const chatFormSchema = z.object({
   message: z.string().min(1, "Please enter a message"),
 });
 
-/**
- * @typedef {Object} ChatFormValues
- * @property {string} message
- */
-
-/**
- * @typedef {Object} Message
- * @property {"user" | "assistant"} role
- * @property {string} content
- * @property {Date} timestamp
- */
-
 export default function ChatAssistant() {
   const [messages, setMessages] = useState([
     {
@@ -54,10 +42,10 @@ export default function ChatAssistant() {
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef(null);
 
   // Form definition
-  const form = useForm<ChatFormValues>({
+  const form = useForm({
     resolver: zodResolver(chatFormSchema),
     defaultValues: {
       message: "",

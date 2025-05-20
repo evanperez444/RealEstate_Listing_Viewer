@@ -1,7 +1,7 @@
 // components/PropertyRating.jsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@clerk/nextjs";
@@ -18,8 +18,33 @@ export function PropertyRating({
   const { isSignedIn } = useAuth();
   const [rating, setRating] = useState(initialRating);
   const [hoverRating, setHoverRating] = useState(0);
-  const [hasRated, setHasRated] = useState(!!initialRating);
+  const [hasRated, setHasRated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+
+  // Check if user has already rated this property
+  useEffect(() => {
+    const checkUserRating = async () => {
+      if (!isSignedIn) return;
+
+      try {
+        const response = await fetch(`/api/properties/${propertyId}/user-rating`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.rating) {
+            setUserRating(data.rating);
+            setRating(data.rating);
+            setHasRated(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking user rating:", error);
+      }
+    };
+
+    checkUserRating();
+  }, [propertyId, isSignedIn]);
 
   const handleClick = (value) => {
     if (!isSignedIn) {
@@ -46,12 +71,14 @@ export function PropertyRating({
       });
       
       if (!response.ok) {
-        throw new Error('Failed to submit rating');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit rating');
       }
       
       const data = await response.json();
       
       setHasRated(true);
+      setUserRating(rating);
       toast.success("Thank you for your rating!");
       
       // Update parent component with new rating info
@@ -59,6 +86,7 @@ export function PropertyRating({
         onRatingUpdated(data.avgRating, data.ratingCount);
       }
     } catch (error) {
+      console.error("Error submitting rating:", error);
       toast.error("Error submitting rating. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -66,7 +94,7 @@ export function PropertyRating({
   };
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <div className={`flex flex-col items-start ${className}`}>
       <div className="flex items-center mb-2">
         <span className="text-sm text-gray-600 mr-2">
           {avgRating > 0 ? `${avgRating.toFixed(1)} (${ratingCount} ratings)` : "No ratings yet"}
@@ -76,11 +104,11 @@ export function PropertyRating({
           {[1, 2, 3, 4, 5].map((value) => (
             <Star
               key={value}
-              className={`h-5 w-5 ${
+              className={`h-5 w-5 cursor-pointer ${
                 (hoverRating || rating) >= value
                   ? "text-yellow-400 fill-yellow-400"
                   : "text-gray-300"
-              } ${hasRated ? "cursor-default" : "cursor-pointer"}`}
+              }`}
               onClick={() => handleClick(value)}
               onMouseEnter={() => !hasRated && setHoverRating(value)}
               onMouseLeave={() => !hasRated && setHoverRating(0)}
@@ -89,7 +117,11 @@ export function PropertyRating({
         </div>
       </div>
 
-      {!hasRated && isSignedIn && (
+      {hasRated ? (
+        <div className="text-sm text-gray-600">
+          <p>Your rating: {userRating}/5</p>
+        </div>
+      ) : isSignedIn ? (
         <Button 
           variant="outline" 
           size="sm" 
@@ -99,6 +131,10 @@ export function PropertyRating({
         >
           {isSubmitting ? "Submitting..." : "Rate This Property"}
         </Button>
+      ) : (
+        <div className="text-sm text-gray-500">
+          Sign in to rate this property
+        </div>
       )}
     </div>
   );
